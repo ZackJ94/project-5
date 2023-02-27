@@ -1,10 +1,11 @@
 """
-Nose tests for acp_times.py
+Nose tests for mypymongo.py
 
 Write your tests HERE AND ONLY HERE.
 """
 
-from mypymongo import brevet_insert, brevet_find
+# FIXME: python refactored this import automatically, is it working?
+from brevets.mypymongo import brevet_insert, brevet_fetch
 
 import arrow
 import nose    # Testing framework

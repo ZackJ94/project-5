@@ -1,22 +1,7 @@
 """
-Open and close time calculations
-for ACP-sanctioned brevets
+Open and close time calculations for ACP-sanctioned brevets
 following rules described at https://rusa.org/octime_alg.html
 and https://rusa.org/pages/rulesForRiders
-"""
-
-import arrow
-import math
-
-###
-#  You MUST provide the following two functions
-#  with these signatures. You must keep
-#  these signatures even if you don't use all the
-#  same arguments.
-###
-
-"""
-GENERAL NOTES:
 
 # useful sites:
 https://rusa.org/pages/acp-brevet-control-times-calculator
@@ -34,21 +19,10 @@ https://rusa.org/octime_acp.html
 
 # Oddities:
 for any control(checkpoint) at 60km or less, divide dist by 20 and then add 1 hour
-
-# "you 'bin' the checkpoints based on their location (vod 1: ~46 mins)
-# "cut time off at minutes -- if you have seconds, truncate to the closest integer"
 """
 
-# GLOBAL STUFF
-
-# store min/max speed based on control 'bin'
-# speed_dict = {
-#    (0, 200): (15, 34),
-#    (200, 400): (15, 32),
-#    (400, 600): (15, 30),
-#    (600, 1000): (11.428, 28),
-#    (1000, 1300): (13.333, 26)
-# }
+import arrow
+import math
 
 # store total time of race (in hours) based on brevet distance
 finish_times = {
@@ -59,7 +33,7 @@ finish_times = {
    1000: 75,
 }
 
-# "these two fxns are called every time someone enters a new checkpoint"
+# these two fxns are called every time someone enters a new checkpoint
 def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
     """
     Args:
@@ -73,8 +47,7 @@ def open_time(control_dist_km, brevet_dist_km, brevet_start_time):
        An arrow object indicating the control open time.
        This will be in the same time zone as the brevet start time.
     """
-
-    #  bin_lengths = [200, 200, 200, 400, 300]     # length of each bin
+    
     bin_subs = [200/34, 200/32, 200/30, 400/28]    # fastest time for each bin to subtract
 
     # race start
@@ -142,9 +115,6 @@ def close_time(control_dist_km, brevet_dist_km, brevet_start_time):
        An arrow object indicating the control close time.
        This will be in the same time zone as the brevet start time.
     """
-
-    # TODO: check for controls that exceed 20% rule (?)
-    # nothing in rubric about it, but mentioned in lab
 
     # first checkpoint always closes after 1 hour
     if (control_dist_km == 0):

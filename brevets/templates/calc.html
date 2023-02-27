@@ -67,7 +67,7 @@
                <div class="col-md-6">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
-                  <button id="fetch">Update</button>  <!-- TODO: get these interactions working -->
+                  <button id="fetch">Display</button> <!-- TODO: get these interactions working -->
                   <button id="insert">Submit</button> <!-- TODO: get these interactions working -->
                </div>
                <!-- columns 5 to 10 -->
@@ -119,21 +119,17 @@
          <script type="text/javascript">
             var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
             var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
-
-            var FETCH_URL = SCRIPT_ROOT + "/fetch_brevet";     // TODO: make these interactions work with the two new app routes i make (insert and find)
-            var INSERT_URL = SCRIPT_ROOT + "/insert_brevet";   // TODO: do these need the underscores?
-
+            var INSERT_URL = SCRIPT_ROOT + "/insert_brevet";
+            var FETCH_URL = SCRIPT_ROOT + "/fetch_brevet";
+      
             function calc_times(control) {
               var km = control.find("input[name='km']").val();
+
               var brevet_dist = document.getElementById("brevet_dist_km").value;
               var start_time = document.getElementById("begin_date").value;
 
               var open_time_field = control.find("input[name='open']");
               var close_time_field = control.find("input[name='close']");
-
-              // TODO: could potentially factor out data to send to make it prettier
-              // [HINT] THIS WILL MAKE IT EASIER TO ADD THINGS IN A FOR LOOP
-              // var data_to_send_to_backend = {km: km, brevet_dist: brevet_dist, etc}
 
               $.getJSON(TIME_CALC_URL, {km: km, brevet_dist: brevet_dist, start_time: start_time}).done(
                 function(data) {
@@ -153,40 +149,42 @@
             }
 
             $(document).ready(function(){
-             // Do the following when the page is finished loading
+                // Do the following when the page is finished loading
+                
+                // TODO: could potentially factor out data to send to make it prettier
+                // [HINT] THIS WILL MAKE IT EASIER TO ADD THINGS IN A FOR LOOP
+                // var data_to_send_to_backend = {km: km, brevet_dist: brevet_dist, etc}
 
-                // TODO: define events here, something like below:
-                // could be possible to use onClick JS function instead of defining an event? [from lab]
-
-                //-- insert
+                // TODO:
+                //---- INSERT ----// 
                 // "instead of updating fields in the HTML here, gonna look at field values
                 // and put them here in the request to send over to flask"
+                $('#insert').click(
+                  function(event) {
+                     event.preventDefault(); // FIXME: do i need this here?
 
+                     // store start time
+                     // store brevet distance
 
-                //-- fetch (could use onClick?)
+                     // checkpoints = []
+
+                     // for each row...
+                        // store km
+                        // store store open time
+                        // store close time
+                     
+                     // clear form (w/o reloading) once everything is stored
+                  }
+                )
+
+                // TODO:
+                //---- FETCH----//
+                // some info in lab vod here; use todo example
                 $('#fetch').click(
-                   function() {
-                     // Do something
-                     $.getJSON(FETCH_URL, {}).done(
-                function(data) {
-                   var times = data.result;
-                   console.log("Got a response: ");
-                   console.log("Response.open = " + times.open);
-                   // This part will automatically fill the open and close slots,
-                   // so don't worry about those.
-
-                   // TODO: will need to get all 20 open/close/km, 
-                   // as well as the single start time and brevet dist,
-                   // so will need a for loop here; something like project 3
-                   open_time_field.val(moment(times.open).format("YYYY-MM-DDTHH:mm"));
-                   close_time_field.val(moment(times.close).format("YYYY-MM-DDTHH:mm"));
-                 }
-               ).fail(function(err){
-                 // In case you get an error...
-                 console.log("Error!");
-                 console.log(err);
-               });
-                   });
+                  function(event) {
+                     event.preventDefault();
+                  }
+                )
 
                 $('input[name="miles"]').change(
                    function() {
