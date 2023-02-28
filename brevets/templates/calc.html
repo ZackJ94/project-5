@@ -67,8 +67,8 @@
                <div class="col-md-6">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
-                  <button id="fetch">Display</button> <!-- TODO: get these interactions working -->
-                  <button id="insert">Submit</button> <!-- TODO: get these interactions working -->
+                  <button name="Display" id="fetch">Display</button> <!-- TODO: change id to display (?) Ali said the buttons had to be 'named' that -->
+                  <button name="Insert" id="insert">Submit</button> <!-- TODO: change id to submit (?) Ali said the buttons had to be 'named' that -->
                </div>
                <!-- columns 5 to 10 -->
             </div>
@@ -161,30 +161,103 @@
                 // and put them here in the request to send over to flask"
                 $('#insert').click(
                   function(event) {
-                     event.preventDefault(); // FIXME: do i need this here?
+                     event.preventDefault();
 
-                     // store start time
-                     // store brevet distance
+                     // store start_time
+                     // store brevet_dist
 
-                     // checkpoints = []
+                     var controls = []
 
                      // for each row...
-                        // store km
-                        // store store open time
-                        // store close time
-                     
-                     // clear form (w/o reloading) once everything is stored
-                  }
-                )
+                     $('.control').each(function() {
 
+                        var control = $(this);
+                        
+                        // get data from fields
+                        var miles = control.find("input[name='miles']").val();
+                        var km = control.find("input[name='km']").val();
+                        var open = control.find("input[name='open']").val();
+                        var close = control.find("input[name='close']").val();
+
+                        // construct dict for THIS control
+                        control_json = {
+                           "miles": miles,
+                           "km": km,
+                           "open": open,
+                           "close": close
+                        }
+
+                        // push the dict we just built to list
+                        controls.push(control_json);
+                     })
+                     
+                     // construct the data we will be sending to Flask
+                     var new_race = {
+                        "start_time": start_time,
+                        "brevet_dist": brevet_dist,
+                        "controls": controls
+                     }
+
+                     // now that we have the info needed,
+                     // send POST request to have the backend store it in the db
+                     $.ajax({
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        type: 'POST',
+                        url: INSERT_URL,
+                        data: JSON.stringify(new_race),
+
+                        // on successful response from flask:
+                        success: function(data) {
+                           // check the status code we set in Flask
+                           // 1 = success, 0 = failure
+                           if (data.status == 1) { console.log("Successfully inserted! Response: ", data) }
+                           else { console.log("Insertion failed: ", data) }
+                        },
+
+                        // on error:
+                        error: function(err) { console.log("Error: ", err) }
+                     })
+                  }
+                  // TODO: clear form (w/o reloading) once everything is stored
+                )
+                  
                 // TODO:
                 //---- FETCH----//
                 // some info in lab vod here; use todo example
                 $('#fetch').click(
                   function(event) {
                      event.preventDefault();
+
+                     // can use getJSON because we're sending a GET request
+                     $.getJSON(FETCH_URL).done(
+                        function(data) {
+                           console.log(data);
+                           if (data.status == 1) {
+                              console.log("Successfully fetched: ", data);
+                              var dist = $("input[name='distance']").val(data.result.brevet_dist)
+                              var start = $("input[name='begin_date']").val(data.result.start_time) // FIXME: is begin_date the actual start time? i think so...
+                              var controls = data.result.controls
+
+                              // for each row in the table...
+                              $('.control').each(function(index) {
+                                 var control = $(this);  // this is our row
+
+                                 // insert values
+                                 control.find("input[name='miles']").val(controls[index].miles);
+                                 control.find("input[name='km']").val(controls[index].km);
+                                 control.find("input[name='open']").val(control[index].open);
+                                 control.find("input[name='close']").val(controls[index].close);
+                              })
+                           }
+                           else { console.log("Fetch failed: ", data) };
+                        }
+                     )
                   }
                 )
+
+
+                
 
                 $('input[name="miles"]').change(
                    function() {
