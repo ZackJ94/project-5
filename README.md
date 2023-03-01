@@ -17,7 +17,7 @@ I have essentially replaced the calculator here [https://rusa.org/octime_acp.htm
 
 ### Building and Serving
 
-Build / serve the docker image / container by running `docker compose up --build -d` from the main directory (where `where docker-compose.yml` is).
+Build / serve the docker image / container by running `docker compose up --build -d` from the main directory (where `docker-compose.yml` is located).
 
 ### Using the App
 
