@@ -4,77 +4,24 @@ Replacement for RUSA ACP brevet time calculator
 
 """
 
-import os
 import flask
 from flask import request
 import arrow  # Replacement for datetime, based on moment.js
 import acp_times  # Brevet time calculations
+
 import config
-
-from pymongo import MongoClient
-from mypymongo import brevet_insert, brevet_fetch
-
 import logging
+
+from mypymongo import brevet_insert, brevet_fetch
 
 
 # set up Flask app
 app = flask.Flask(__name__)
 CONFIG = config.configuration()
 
-# set up MongoDB connection
-client = MongoClient('mongodb://' + os.environ['MONGODB_HOSTNAME'], 27017)
-
-# use database "brevets"
-db = client.brevets
-
-# use collection "races"
-collection = db.races
-
-
-##################################################
-################ MongoDB Functions ############### 
-##################################################
-
-def get_brevet():
-    """
-    Obtains the newest document in the "races" collection in database "brevets"
-    Returns start time, distance, and controls (list of dictionaries) as tuple
-    """
-    # Get documents (rows) in our collection (table),
-    # Sort by primary key in descending order and limit to 1 document (row)
-    # This will translate into finding the newest inserted document.
-
-    lists = collection.find().sort("_id", -1).limit(1)
-
-    # lists is a PyMongo cursor, which acts like a pointer.
-    # We need to iterate through it, even if we know it has only one entry:
-    for li in lists:
-        return li["start_time"], li["brevet_dist"], li["controls"]
-
-
-def insert_brevet(start_time, brevet_dist, controls):
-    """
-    Inserts a new to-do list into the database "brevets", under the collection "races"
-    Inputs a start time (string?), brev_dist (string?), and controls (list of dictionaries)
-    Returns the unique ID assigned to the document by mongo (primary key.)
-    """
-    output = collection.insert_one({
-        "start_time": start_time,
-        "brevet_dist": brevet_dist,
-        "controls": controls
-        })
-    
-    #  this is how you obtain the primary key (_id) mongo assigns to your inserted document.
-    _id = output.inserted_id
-    return str(_id)
-
-
 ##################################################
 ################## Flask routes ################## 
 ##################################################
-
-# AJAX request handlers
-# These return JSON, rather than rendering pages.
 
 @app.route("/")
 @app.route("/index")
@@ -82,6 +29,11 @@ def index():
     app.logger.debug("Main page entry")
     return flask.render_template('calc.html')
 
+
+##################################################
+############# AJAX request handlers ##############
+##################################################
+# (These return JSON, rather than rendering pages)
 
 @app.route("/_calc_times")
 def _calc_times():
@@ -114,7 +66,6 @@ def insert():
     Accepts POST requests ONLY!
     JSON interface: gets JSON, responds with JSON
     """
-
     try:
         # Read the entire request body as a JSON
         # This will fail if the request body is NOT a JSON.
@@ -125,10 +76,6 @@ def insert():
         start_time = input_json["start_time"]   # Should be a string
         brevet_dist = input_json["brevet_dist"] # Should be a string
         controls = input_json["controls"]       # Should be a list of dictionaries
-
-        app.logger.debug(f"START TIME: {input_json['start_time']}")
-        app.logger.debug(f"BREVET DIST: {input_json['brevet_dist']}")
-        app.logger.debug(f"CONTROLS: {input_json['controls']}")
 
         if (not controls):
             return flask.jsonify(result={},
@@ -143,7 +90,7 @@ def insert():
                         mongo_id='None')
 
         else:
-            brev_id = insert_brevet(start_time, brevet_dist, controls)
+            brev_id = brevet_insert(start_time, brevet_dist, controls)
             return flask.jsonify(result={},
                             message="Inserted!", 
                             status=1,
@@ -167,9 +114,8 @@ def fetch():
     Accepts GET requests ONLY!
     JSON interface: gets JSON, responds with JSON
     """
-
     try:
-        start_time, brevet_dist, controls = get_brevet()
+        start_time, brevet_dist, controls = brevet_fetch()
         return flask.jsonify(
                 result={"start_time": start_time, "brevet_dist": brevet_dist, "controls": controls}, 
                 status=1,

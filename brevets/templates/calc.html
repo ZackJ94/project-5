@@ -29,7 +29,6 @@
    <!-- Our own stylesheet -->
    <link rel="stylesheet" href="/static/css/calc.css" />
 
-
    <body>
       <div class="container">
          <h1>ACP Brevet Times</h1>
@@ -171,6 +170,7 @@
                         var km = control.find("input[name='km']").val();
                         var open = control.find("input[name='open']").val();
                         var close = control.find("input[name='close']").val();
+                        var location = control.find("input[name='location']").val();
 
                         if (km && open && close) {
                            // construct dict for this entry
@@ -178,7 +178,8 @@
                               "miles": miles,
                               "km": km,
                               "open": open,
-                              "close": close
+                              "close": close,
+                              "location": location
                            }
                            // push control dict to list
                            controls.push(control_json);
@@ -217,6 +218,7 @@
                         control.find("input[name='km']").val('');
                         control.find("input[name='open']").val('');
                         control.find("input[name='close']").val('');
+                        control.find("input[name='location']").val('');
                      })
                   })
 
@@ -245,12 +247,14 @@
                                     control.find("input[name='km']").val(controls[index].km);
                                     control.find("input[name='open']").val(controls[index].open);
                                     control.find("input[name='close']").val(controls[index].close);
+                                    control.find("input[name='location']").val(controls[index].location);
                                  }
                                  else { // remove 'dangling' rows
                                     control.find("input[name='miles']").val('');
                                     control.find("input[name='km']").val('');
                                     control.find("input[name='open']").val('');
                                     control.find("input[name='close']").val('');
+                                    control.find("input[name='location']").val('');
                                  }
                               })
                            }
@@ -267,7 +271,6 @@
                        var control_entry = $(this).parents(".control")
                        var target = control_entry.find("input[name='km']");
                        target.val( km );
-                       
                        // Then calculate times for this entry
                        calc_times(control_entry);
                     });
@@ -287,7 +290,6 @@
                     });
 
                });
-
          </script>
 
       </div>
