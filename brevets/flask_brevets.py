@@ -125,8 +125,8 @@ def insert():
     try:
         # Read the entire request body as a JSON
         # This will fail if the request body is NOT a JSON.
-        input_json = request.json
         # if successful, input_json is automatically parsed into a python dictionary!
+        input_json = request.json
         
         # Because input_json is a dictionary, we can do this:
         start_time = input_json["start_time"]   # Should be a string
@@ -137,12 +137,25 @@ def insert():
         app.logger.debug(f"BREVET DIST: {input_json['brevet_dist']}")
         app.logger.debug(f"CONTROLS: {input_json['controls']}")
 
-        brev_id = insert_brevet(start_time, brevet_dist, controls)
+        if (not controls):
+            return flask.jsonify(result={},
+                        message="Cannot insert empty brevet!", 
+                        status=0, 
+                        mongo_id='None')
 
-        return flask.jsonify(result={},
-                        message="Inserted!", 
-                        status=1,
-                        mongo_id=brev_id)
+        if (not start_time):
+            return flask.jsonify(result={},
+                        message="No start time provided!", 
+                        status=0, 
+                        mongo_id='None')
+
+        else:
+            brev_id = insert_brevet(start_time, brevet_dist, controls)
+            return flask.jsonify(result={},
+                            message="Inserted!", 
+                            status=1,
+                            mongo_id=brev_id)
+
     except:
         # The reason for the try and except is to ensure Flask responds with a JSON.
         # If Flask catches your error, it means you didn't catch it yourself,

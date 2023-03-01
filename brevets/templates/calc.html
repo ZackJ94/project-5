@@ -178,16 +178,16 @@
                         var open = control.find("input[name='open']").val();
                         var close = control.find("input[name='close']").val();
 
-                        // construct dict for THIS control
-                        control_json = {
-                           "miles": miles,
-                           "km": km,
-                           "open": open,
-                           "close": close
+                        if (km && open && close) {
+                           // construct dict for THIS control
+                           control_json = {
+                              "miles": miles,
+                              "km": km,
+                              "open": open,
+                              "close": close
+                           }
+                           controls.push(control_json);
                         }
-
-                        // push the dict we just built to list
-                        controls.push(control_json);
                      })
                      
                      // construct the data we will be sending to Flask
@@ -218,20 +218,16 @@
                         error: function(err) { console.log("Error: ", err) }
                      })
                      
-                     // TODO: clear form (w/o reloading) once everything is stored
-                     // for each row in the table...
+                     // clear entries
                      $('.control').each(function(index) {
-                     
-                        var control = $(this);  // this is our row (control)
-                     
-                     // insert values
-                     control.find("input[name='miles']").val('');
-                     control.find("input[name='km']").val('');
-                     control.find("input[name='open']").val('');
-                     control.find("input[name='close']").val('');
+                        var control = $(this);
+                        
+                        control.find("input[name='miles']").val('');
+                        control.find("input[name='km']").val('');
+                        control.find("input[name='open']").val('');
+                        control.find("input[name='close']").val('');
+                     })
                   })
-               }
-                )
 
                 //---- FETCH----//
                 // some info in lab vod here; use todo example
@@ -243,7 +239,9 @@
                      // getJSON because we're sending a GET request
                      $.getJSON(FETCH_URL).done(
                         function(data) {
+
                            console.log(data);
+
                            if (data.status == 1) {
                               console.log("Successfully fetched: ", data);
                               var dist = $("input[name='distance']").val(data.result.brevet_dist)
@@ -255,11 +253,13 @@
 
                                  var control = $(this);  // this is our row (control)
 
-                                 // insert values
-                                 control.find("input[name='miles']").val(controls[index].miles);
-                                 control.find("input[name='km']").val(controls[index].km);
-                                 control.find("input[name='open']").val(controls[index].open);
-                                 control.find("input[name='close']").val(controls[index].close);
+                                 if (controls[index]?.km) {
+                                    // insert values
+                                    control.find("input[name='miles']").val(controls[index].miles);
+                                    control.find("input[name='km']").val(controls[index].km);
+                                    control.find("input[name='open']").val(controls[index].open);
+                                    control.find("input[name='close']").val(controls[index].close);
+                                 }
                               })
                            }
                            else { console.log("Fetch failed: ", data) };
