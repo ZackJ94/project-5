@@ -134,8 +134,10 @@
               $.getJSON(TIME_CALC_URL, {km: km, brevet_dist: brevet_dist, start_time: start_time}).done(
                 function(data) {
                    var times = data.result;
-                   console.log("Got a response: ");
-                   console.log("Response.open = " + times.open);
+                   
+                   // console.log("Got a response: ");
+                   // console.log("Response.open = " + times.open);
+
                    // This part will automatically fill the open and close slots,
                    // so don't worry about those.
                    open_time_field.val(moment(times.open).format("YYYY-MM-DDTHH:mm"));
@@ -150,22 +152,19 @@
 
             $(document).ready(function(){
                 // Do the following when the page is finished loading
-                
-                // TODO: could potentially factor out data to send to make it prettier
-                // [HINT] THIS WILL MAKE IT EASIER TO ADD THINGS IN A FOR LOOP
-                // var data_to_send_to_backend = {km: km, brevet_dist: brevet_dist, etc}
 
-                // TODO:
                 //---- INSERT ----// 
                 // "instead of updating fields in the HTML here, gonna look at field values
                 // and put them here in the request to send over to flask"
                 $('#insert').click(
                   function(event) {
+
                      event.preventDefault();
 
-                     // store start_time
-                     // store brevet_dist
+                     var start_time = document.getElementById("begin_date").value;
+                     var brevet_dist = document.getElementById("brevet_dist_km").value;
 
+                     // init list
                      var controls = []
 
                      // for each row...
@@ -218,35 +217,48 @@
                         // on error:
                         error: function(err) { console.log("Error: ", err) }
                      })
-                  }
-                  // TODO: clear form (w/o reloading) once everything is stored
+                     
+                     // TODO: clear form (w/o reloading) once everything is stored
+                     // for each row in the table...
+                     $('.control').each(function(index) {
+                     
+                        var control = $(this);  // this is our row (control)
+                     
+                     // insert values
+                     control.find("input[name='miles']").val('');
+                     control.find("input[name='km']").val('');
+                     control.find("input[name='open']").val('');
+                     control.find("input[name='close']").val('');
+                  })
+               }
                 )
-                  
-                // TODO:
+
                 //---- FETCH----//
                 // some info in lab vod here; use todo example
                 $('#fetch').click(
                   function(event) {
+
                      event.preventDefault();
 
-                     // can use getJSON because we're sending a GET request
+                     // getJSON because we're sending a GET request
                      $.getJSON(FETCH_URL).done(
                         function(data) {
                            console.log(data);
                            if (data.status == 1) {
                               console.log("Successfully fetched: ", data);
                               var dist = $("input[name='distance']").val(data.result.brevet_dist)
-                              var start = $("input[name='begin_date']").val(data.result.start_time) // FIXME: is begin_date the actual start time? i think so...
+                              var start = $("input[name='begin_date']").val(data.result.start_time)
                               var controls = data.result.controls
 
                               // for each row in the table...
                               $('.control').each(function(index) {
-                                 var control = $(this);  // this is our row
+
+                                 var control = $(this);  // this is our row (control)
 
                                  // insert values
                                  control.find("input[name='miles']").val(controls[index].miles);
                                  control.find("input[name='km']").val(controls[index].km);
-                                 control.find("input[name='open']").val(control[index].open);
+                                 control.find("input[name='open']").val(controls[index].open);
                                  control.find("input[name='close']").val(controls[index].close);
                               })
                            }
@@ -255,9 +267,6 @@
                      )
                   }
                 )
-
-
-                
 
                 $('input[name="miles"]').change(
                    function() {

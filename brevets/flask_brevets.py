@@ -35,49 +35,38 @@ collection = db.races
 ################ MongoDB Functions ############### 
 ##################################################
 
-# TODO:
-# def get_brevet():
-#     """
-#     Obtains the newest document in the "races" collection in database "brevets".
+def get_brevet():
+    """
+    Obtains the newest document in the "races" collection in database "brevets"
+    Returns start time, distance, and controls (list of dictionaries) as tuple
+    """
+    # Get documents (rows) in our collection (table),
+    # Sort by primary key in descending order and limit to 1 document (row)
+    # This will translate into finding the newest inserted document.
 
-#     Returns start time, distance, and controls (list of dictionaries) as list?
-#     """
-#     # Get documents (rows) in our collection (table),
-#     # Sort by primary key in descending order and limit to 1 document (row)
-#     # This will translate into finding the newest inserted document.
+    lists = collection.find().sort("_id", -1).limit(1)
 
-#     lists = collection.find().sort("_id", -1).limit(1)
+    # lists is a PyMongo cursor, which acts like a pointer.
+    # We need to iterate through it, even if we know it has only one entry:
+    for li in lists:
+        return li["start_time"], li["brevet_dist"], li["controls"]
 
-#     # lists is a PyMongo cursor, which acts like a pointer.
-#     # We need to iterate through it, even if we know it has only one entry:
-#     for li in lists:
-#         # We store all of our lists as documents with three fields:
-#         ## start_time: begin time of the brevet
-#         ## brevet_dist: distance of brevet
-#         ## controls: list of controls 
 
-#         # every control has four fields:
-#         ## miles
-#         ## km
-#         ## open
-#         ## close
-#         return li["start_time"], li["brevet_dist"], li["controls"]
-
-## TODO:
-# def insert_brevet(title, items):
-#     """
-#     Inserts a new to-do list into the database "todo", under the collection "lists".
+def insert_brevet(start_time, brevet_dist, controls):
+    """
+    Inserts a new to-do list into the database "brevets", under the collection "races"
+    Inputs a start time (string?), brev_dist (string?), and controls (list of dictionaries)
+    Returns the unique ID assigned to the document by mongo (primary key.)
+    """
+    output = collection.insert_one({
+        "start_time": start_time,
+        "brevet_dist": brevet_dist,
+        "controls": controls
+        })
     
-#     Inputs a title (string) and items (list of dictionaries)
-
-#     Returns the unique ID assigned to the document by mongo (primary key.)
-#     """
-#     output = collection.insert_one({
-#         "title": title,
-#         "items": items})
-#     _id = output.inserted_id # this is how you obtain the primary key (_id) mongo assigns to your inserted document.
-#     return str(_id)
-
+    #  this is how you obtain the primary key (_id) mongo assigns to your inserted document.
+    _id = output.inserted_id
+    return str(_id)
 
 
 ##################################################
@@ -87,22 +76,11 @@ collection = db.races
 # AJAX request handlers
 # These return JSON, rather than rendering pages.
 
-# TODO: need to make 2 more app routes for insert and fetch
-# get the info that JS gives them (in a similar way to kms, etc below):
-# km = request.args.get('km', 999, type=float)
-
-
 @app.route("/")
 @app.route("/index")
 def index():
     app.logger.debug("Main page entry")
     return flask.render_template('calc.html')
-
-
-@app.errorhandler(404)
-def page_not_found(error):
-    app.logger.debug("Page not found")
-    return flask.render_template('404.html'), 404
 
 
 @app.route("/_calc_times")
@@ -114,9 +92,6 @@ def _calc_times():
     """
 
     app.logger.debug("Got a JSON request")
-
-    # TODO: handle errors by returning a JSON (?)
-    # mentioned in lab, but idt its required, just good practice
 
     # get values from webpage
     km = request.args.get('km', 999, type=float)
@@ -143,9 +118,7 @@ def _calc_times():
 def insert():
     """
     /insert_brevet : inserts a brevet into the database.
-
     Accepts POST requests ONLY!
-
     JSON interface: gets JSON, responds with JSON
     """
 
@@ -156,16 +129,20 @@ def insert():
         # if successful, input_json is automatically parsed into a python dictionary!
         
         # Because input_json is a dictionary, we can do this:
-        start_time = input_json["start_time"] # Should be a string
-        brevet_dist = input_json["brevet_dist"] # Should be a list of dictionaries
-        controls = input_json["controls"]
+        start_time = input_json["start_time"]   # Should be a string
+        brevet_dist = input_json["brevet_dist"] # Should be a string
+        controls = input_json["controls"]       # Should be a list of dictionaries
 
-        todo_id = insert_todo(title, items)
+        app.logger.debug(f"START TIME: {input_json['start_time']}")
+        app.logger.debug(f"BREVET DIST: {input_json['brevet_dist']}")
+        app.logger.debug(f"CONTROLS: {input_json['controls']}")
+
+        brev_id = insert_brevet(start_time, brevet_dist, controls)
 
         return flask.jsonify(result={},
                         message="Inserted!", 
-                        status=1, # This is defined by you. You just read this value in your javascript.
-                        mongo_id=todo_id)
+                        status=1,
+                        mongo_id=brev_id)
     except:
         # The reason for the try and except is to ensure Flask responds with a JSON.
         # If Flask catches your error, it means you didn't catch it yourself,
@@ -177,28 +154,31 @@ def insert():
                         mongo_id='None')
 
 
-# @app.route("/fetch_brevet")
-# def fetch():
-#     """
-#     /fetch_brevet : fetches the newest brevet from the database.
+@app.route("/fetch_brevet")
+def fetch():
+    """
+    /fetch_brevet : fetches the newest brevet from the database.
+    Accepts GET requests ONLY!
+    JSON interface: gets JSON, responds with JSON
+    """
 
-#     Accepts GET requests ONLY!
-
-#     JSON interface: gets JSON, responds with JSON
-#     """
-#     try:
-#         title, items = get_todo()
-#         return flask.jsonify(
-#                 result={"title": title, "items": items}, 
-#                 status=1,
-#                 message="Successfully fetched a to-do list!")
-#     except:
-#         return flask.jsonify(
-#                 result={}, 
-#                 status=0,
-#                 message="Something went wrong, couldn't fetch any lists!")
+    try:
+        start_time, brevet_dist, controls = get_brevet()
+        return flask.jsonify(
+                result={"start_time": start_time, "brevet_dist": brevet_dist, "controls": controls}, 
+                status=1,
+                message="Successfully fetched a brevet!")
+    except:
+        return flask.jsonify(
+                result={}, 
+                status=0,
+                message="Something went wrong, couldn't fetch any lists!")
 
 
+@app.errorhandler(404)
+def page_not_found(error):
+    app.logger.debug("Page not found")
+    return flask.render_template('404.html'), 404
 
 
 ##################################################
