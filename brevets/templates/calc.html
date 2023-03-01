@@ -67,8 +67,8 @@
                <div class="col-md-6">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
-                  <button name="Display" id="fetch">Display</button> <!-- TODO: change id to display (?) Ali said the buttons had to be 'named' that -->
-                  <button name="Insert" id="insert">Submit</button> <!-- TODO: change id to submit (?) Ali said the buttons had to be 'named' that -->
+                  <button name="Display" id="display">Display</button>
+                  <button name="Insert" id="submit">Submit</button>
                </div>
                <!-- columns 5 to 10 -->
             </div>
@@ -151,25 +151,19 @@
             }
 
             $(document).ready(function(){
-                // Do the following when the page is finished loading
 
                 //---- INSERT ----// 
-                // "instead of updating fields in the HTML here, gonna look at field values
-                // and put them here in the request to send over to flask"
-                $('#insert').click(
+                $('#submit').click(
                   function(event) {
-
                      event.preventDefault();
 
                      var start_time = document.getElementById("begin_date").value;
                      var brevet_dist = document.getElementById("brevet_dist_km").value;
 
-                     // init list
                      var controls = []
 
                      // for each row...
                      $('.control').each(function() {
-
                         var control = $(this);
                         
                         // get data from fields
@@ -179,25 +173,25 @@
                         var close = control.find("input[name='close']").val();
 
                         if (km && open && close) {
-                           // construct dict for THIS control
+                           // construct dict for this entry
                            control_json = {
                               "miles": miles,
                               "km": km,
                               "open": open,
                               "close": close
                            }
+                           // push control dict to list
                            controls.push(control_json);
                         }
                      })
                      
-                     // construct the data we will be sending to Flask
+                     // construct the data we will send to Flask
                      var new_race = {
                         "start_time": start_time,
                         "brevet_dist": brevet_dist,
                         "controls": controls
                      }
 
-                     // now that we have the info needed,
                      // send POST request to have the backend store it in the db
                      $.ajax({
                         dataType: 'json',
@@ -205,15 +199,12 @@
                         type: 'POST',
                         url: INSERT_URL,
                         data: JSON.stringify(new_race),
-
                         // on successful response from flask:
                         success: function(data) {
-                           // check the status code we set in Flask
                            // 1 = success, 0 = failure
                            if (data.status == 1) { console.log("Successfully inserted! Response: ", data) }
                            else { console.log("Insertion failed: ", data) }
                         },
-
                         // on error:
                         error: function(err) { console.log("Error: ", err) }
                      })
@@ -221,7 +212,7 @@
                      // clear entries
                      $('.control').each(function(index) {
                         var control = $(this);
-                        
+
                         control.find("input[name='miles']").val('');
                         control.find("input[name='km']").val('');
                         control.find("input[name='open']").val('');
@@ -230,16 +221,13 @@
                   })
 
                 //---- FETCH----//
-                // some info in lab vod here; use todo example
-                $('#fetch').click(
+                $('#display').click(
                   function(event) {
-
                      event.preventDefault();
 
                      // getJSON because we're sending a GET request
                      $.getJSON(FETCH_URL).done(
                         function(data) {
-
                            console.log(data);
 
                            if (data.status == 1) {
@@ -248,25 +236,27 @@
                               var start = $("input[name='begin_date']").val(data.result.start_time)
                               var controls = data.result.controls
 
-                              // for each row in the table...
+                              // populate rows
                               $('.control').each(function(index) {
+                                 var control = $(this);
 
-                                 var control = $(this);  // this is our row (control)
-
-                                 if (controls[index]?.km) {
-                                    // insert values
+                                 if (controls[index]?.km && controls[index]?.open && controls[index]?.close) {
                                     control.find("input[name='miles']").val(controls[index].miles);
                                     control.find("input[name='km']").val(controls[index].km);
                                     control.find("input[name='open']").val(controls[index].open);
                                     control.find("input[name='close']").val(controls[index].close);
                                  }
+                                 else { // remove 'dangling' rows
+                                    control.find("input[name='miles']").val('');
+                                    control.find("input[name='km']").val('');
+                                    control.find("input[name='open']").val('');
+                                    control.find("input[name='close']").val('');
+                                 }
                               })
                            }
                            else { console.log("Fetch failed: ", data) };
-                        }
-                     )
-                  }
-                )
+                        })
+                  })
 
                 $('input[name="miles"]').change(
                    function() {

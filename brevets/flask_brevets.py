@@ -90,7 +90,6 @@ def _calc_times():
     described at https://rusa.org/octime_alg.html.
     Expects one URL-encoded argument, the number of miles.
     """
-
     app.logger.debug("Got a JSON request")
 
     # get values from webpage
@@ -100,12 +99,6 @@ def _calc_times():
 
     # convert start_time string --> arrow object
     start_time_arrow = arrow.get(start_time, 'YYYY-MM-DD[T]HH:mm')
-
-    # app.logger.debug(f"km = {km}")
-    # app.logger.debug(f"brevet_dist = {brevet_dist}")
-    # app.logger.debug(f"start_time = {start_time}")
-    # app.logger.debug(f"start_time_arrow = {start_time_arrow}")
-    # app.logger.debug(f"request.args: {request.args}")
 
     open_time = acp_times.open_time(km, brevet_dist, start_time_arrow).format('YYYY-MM-DDTHH:mm')    
     close_time = acp_times.close_time(km, brevet_dist, start_time_arrow).format('YYYY-MM-DDTHH:mm')
