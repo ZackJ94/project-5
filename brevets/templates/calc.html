@@ -234,7 +234,8 @@
 
                            if (data.status == 1) {
                               console.log("Successfully fetched: ", data);
-                              var dist = $("input[name='distance']").val(data.result.brevet_dist)
+                              // var dist = $("input[name='distance']").val(data.result.brevet_dist)
+                              var brevet_dist = document.getElementById("brevet_dist_km").value = data.result.brevet_dist; // FIXME: testing
                               var start = $("input[name='begin_date']").val(data.result.start_time)
                               var controls = data.result.controls
 
